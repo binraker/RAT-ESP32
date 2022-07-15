@@ -141,7 +141,7 @@ void ReadFromSerial( void *pvParameters )
     if(Serial.available()>0)
     {
       String message = Serial.readStringUntil('\n');
-      LOG_INF("Message recived: %s", message);
+      LOG_INF("Message recived: %s", message.c_str());
       messages[messagePointer] = message;
       messagePointer++;
       messagePointer = messagePointer % 10;
