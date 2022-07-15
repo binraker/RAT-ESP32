@@ -162,6 +162,7 @@ void startSerialIn()
       {
         messages[i] = "";
       }
+  
   xTaskCreate(&ReadFromSerial, "ReadFromSerial", 4096,  NULL,  2,  NULL );
 }
 

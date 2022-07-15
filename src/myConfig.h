@@ -314,8 +314,8 @@ extern SemaphoreHandle_t frameMutex;
 extern SemaphoreHandle_t motionMutex;
 
 //RAT
- extern String messages[10];
- extern int messagePointer;
+extern String messages[10];
+extern int messagePointer;
 
 
 

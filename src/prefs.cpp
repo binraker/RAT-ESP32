@@ -131,7 +131,7 @@ static void buildAppJsonString(bool quick) {
   p += sprintf(p, "\"TinyML\":["); 
   for (int i = 0; i < 10; i++)
       {
-        p += sprintf(p, "\"%s\"" ,messages[(messagePointer + i) % 10 ]);
+        p += sprintf(p, "\"%s\"" ,messages[(messagePointer + i) % 10 ].c_str());
         if (i !=9 )
         p += sprintf(p, ",");
       }
