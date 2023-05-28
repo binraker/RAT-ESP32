@@ -10,13 +10,14 @@
 #include "camera_pins.h"
 
 
-
 void setup() {
   Serial.begin(115200);
   Serial.setDebugOutput(true);
   Serial.println("begin");
   
   LOG_INF("=============== Starting ===============");
+  delay(2000);
+  getBootCount();
   if (!psramFound()) {
     LOG_WRN("Need PSRAM to be enabled");
     delay(10000);
@@ -126,6 +127,7 @@ void setup() {
   setupADC(); 
   checkMemory();
   startSerialIn();
+  //getBootCount();
   LOG_INF("Camera Ready @ %uMHz, version %s", XCLK_MHZ, APP_VER); 
 }
 

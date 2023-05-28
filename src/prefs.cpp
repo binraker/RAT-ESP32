@@ -405,3 +405,60 @@ bool loadConfig() {
   if (strlen(ST_SSID)) LOG_INF("Using ssid: %s%s %s", ST_SSID, !strlen(ST_ip) ? " " : " with static ip ", ST_ip);
   return true;
 }
+
+//RAT
+
+void getBootCount(){
+  prefs.begin("bootcounter", false);
+  uint32_t bootcount = prefs.getUInt("counter", 0);
+  bootcount++;
+  prefs.putUInt("counter", bootcount);
+  prefs.end();
+  //create time from boot count
+  
+  int rem = bootcount % 356;
+
+  int Year, Month, Day, Hour, Minute, Second ;
+  Year = (bootcount / 365) + 1;
+  rem = bootcount % 356;
+  Month = rem / 12;
+  rem = rem % 12;
+  Day = rem;
+  Hour = 0;
+  Minute = 0;
+  Second = 0;
+
+  struct tm t;
+  t.tm_year = Year;
+  t.tm_mon  = Month;    // Month, 0 - jan
+  t.tm_mday = Day;          // Day of the month
+  t.tm_hour = Hour;
+  t.tm_min  = Minute;
+  t.tm_sec  = Second;
+
+  time_t t_of_day = mktime(&t);
+  timeval epoch = {t_of_day, 0};
+  struct timezone utc = {0, 0};
+  settimeofday(&epoch, &utc);
+  //setenv("TZ", timezone, 1);
+//  Serial.print(&now, "Before sync: %B %d %Y %H:%M:%S (%A) ");
+struct tm now;
+  getLocalTime(&now, 0);
+//  Serial.println(&now, "After sync: %B %d %Y %H:%M:%S (%A)");
+  timeSynchronized = true;
+
+   Serial.print("@ ");
+  Serial.println(&now, "%Y:%m:%d:%H:%M:%S");
+
+
+
+
+ 
+
+
+ // Serial.print("bootcount: ");
+   // Serial.println(bootcount);
+
+}
+
+

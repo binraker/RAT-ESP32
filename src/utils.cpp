@@ -36,6 +36,9 @@ char   AP_gw[16]  = "";
 static esp_ping_handle_t pingHandle = NULL;
 static void startPing();
 
+
+
+
 static void setupMndsHost() {  //Mdns services   
   if (MDNS.begin(hostName) ) {
     // Add service to MDNS-SD
@@ -234,6 +237,10 @@ void syncToBrowser(const char *val) {
   Serial.println(&now, "%Y:%m:%d:%H:%M:%S");
 //RAT
 }
+
+
+
+
 
 void getUpTime(char* timeVal) {
   uint32_t secs = millis() / 1000; //convert milliseconds to seconds

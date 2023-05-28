@@ -183,6 +183,9 @@ void updateCamTilt(int tiltVal);
 size_t writeAviIndex(byte* clientBuf, size_t buffSize, bool isTL = false);
 size_t writeWavFile(byte* clientBuf, size_t buffSize);
 
+//RAT
+void getBootCount();
+
 // global general utility functions in utils.cpp / utilsSD.cpp
 void buildJsonString(bool quick); 
 bool checkDataFiles();
@@ -316,6 +319,7 @@ extern SemaphoreHandle_t motionMutex;
 //RAT
 extern String messages[10];
 extern int messagePointer;
+extern uint32_t bootcount;
 
 
 
