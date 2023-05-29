@@ -16,7 +16,7 @@ void setup() {
   Serial.println("begin");
   
   LOG_INF("=============== Starting ===============");
-  delay(2000);
+  delay(8000);
   getBootCount();
   if (!psramFound()) {
     LOG_WRN("Need PSRAM to be enabled");
