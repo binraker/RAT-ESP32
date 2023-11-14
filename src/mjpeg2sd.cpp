@@ -23,25 +23,25 @@ bool doRecording = true; // whether to capture to SD or not
 bool lampOn = false;
 
 // header and reporting info
-static uint32_t vidSize; // total video size
-static uint16_t frameCnt;
-static uint32_t startTime; // total overall time
-static uint32_t dTimeTot; // total frame decode/monitor time
-static uint32_t fTimeTot; // total frame buffering time
-static uint32_t wTimeTot; // total SD write time
-static uint32_t oTime; // file opening time
-static uint32_t cTime; // file closing time
-static uint32_t sTime; // file streaming time
+uint32_t vidSize; // total video size
+uint16_t frameCnt;
+uint32_t startTime; // total overall time
+uint32_t dTimeTot; // total frame decode/monitor time
+uint32_t fTimeTot; // total frame buffering time
+uint32_t wTimeTot; // total SD write time
+uint32_t oTime; // file opening time
+uint32_t cTime; // file closing time
+uint32_t sTime; // file streaming time
 
 uint8_t frameDataRows = 14;                         
-static uint16_t frameInterval; // units of 0.1ms between frames
+uint16_t frameInterval; // units of 0.1ms between frames
 
 // SD card storage
 #define MAX_JPEG ONEMEG/2 // UXGA jpeg frame buffer at highest quality 375kB rounded up
 uint8_t iSDbuffer[(RAMSIZE + CHUNK_HDR) * 2];
-static size_t highPoint;
-static File aviFile;
-static char aviFileName[FILE_NAME_LEN];
+size_t highPoint;
+File aviFile;
+char aviFileName[FILE_NAME_LEN];
 
 // SD playback
 static File playbackFile;
@@ -64,6 +64,9 @@ bool isCapturing = false;
 bool stopPlayback = false;
 bool timeLapseOn = false;
 
+bool capture_synced_Syntiant_AVI = false;
+bool capturing_synced_Syntiant_AVI = false;
+char capture_synced_Syntiant_AVI_FileName[40];
 /**************** timers & ISRs ************************/
 
 static void IRAM_ATTR frameISR() {
@@ -94,17 +97,31 @@ void controlFrameTimer(bool restartTimer) {
   }
 }
 
-/**************** capture AVI  ************************/
+/**************** capture AVI from Syntiant TinyML board's message ************************/
+
+
+void set_synced_Syntiant_AVI_FileName(const char *synced_Syntiant_AVI_fileName){
+  // Copy the inputString to the global variable
+  strncpy(capture_synced_Syntiant_AVI_FileName, synced_Syntiant_AVI_fileName, sizeof(capture_synced_Syntiant_AVI_FileName) - 1);
+}
 
 static void openAvi() {
   // derive filename from date & time, store in date folder
   // time to open a new file on SD increases with the number of files already present
   oTime = millis();
+  /*
+  if(capture_synced_Syntiant_AVI){
+    dateFormat(partName, sizeof(partName), true);
+    SD_MMC.mkdir(partName); // make date folder if not present
+    dateFormat(partName, sizeof(partName), false);
+  }
+  */
   dateFormat(partName, sizeof(partName), true);
   SD_MMC.mkdir(partName); // make date folder if not present
   dateFormat(partName, sizeof(partName), false);
+
   // open avi file with temporary name 
-  aviFile  = SD_MMC.open(AVITEMP, FILE_WRITE);
+  aviFile = SD_MMC.open(AVITEMP, FILE_WRITE);
   oTime = millis() - oTime;
   LOG_DBG("File opening time: %ums", oTime);
   startAudio();
@@ -241,7 +258,7 @@ static bool closeAvi() {
   // closes the recorded file
   uint32_t vidDuration = millis() - startTime;
   uint32_t vidDurationSecs = lround(vidDuration/1000.0);
-  Serial.println("");
+  //Serial.println("");
   LOG_DBG("Capture time %u, min seconds: %u ", vidDurationSecs, minSeconds);
 
   cTime = millis();
@@ -276,9 +293,25 @@ static bool closeAvi() {
   uint32_t hTime = millis(); 
   if (vidDurationSecs >= minSeconds) {
     // name file to include actual dateTime, FPS, duration, and frame count
-    snprintf(aviFileName, sizeof(aviFileName)-1, "%s_%s_%lu_%lu_%u%s.%s", 
-      partName, frameData[fsizePtr].frameSizeStr, actualFPSint, vidDurationSecs, frameCnt, haveWav ? "_S" : "", FILE_EXT);
+
+    if(!capture_synced_Syntiant_AVI){
+      snprintf(aviFileName, sizeof(aviFileName)-1, "%s_%s_%lu_%lu_%u%s.%s", 
+        partName, frameData[fsizePtr].frameSizeStr, actualFPSint, vidDurationSecs, frameCnt, haveWav ? "_S" : "", FILE_EXT);
+    }
+    else if (capture_synced_Syntiant_AVI){
+      /*
+      snprintf(aviFileName, sizeof(aviFileName)-1, "%s_%s_%lu_%lu_%u%s_test.%s", 
+        partName, frameData[fsizePtr].frameSizeStr, actualFPSint, vidDurationSecs, frameCnt, haveWav ? "_S" : "", FILE_EXT);
+      */
+     snprintf(aviFileName, sizeof(aviFileName)-1, "%s_%s_%lu_%lu_%u%s.%s", 
+        partName, frameData[fsizePtr].frameSizeStr, actualFPSint, vidDurationSecs, frameCnt, haveWav ? "_S" : "", FILE_EXT);
+      capture_synced_Syntiant_AVI = false;
+      capturing_synced_Syntiant_AVI = false;
+      //strcpy(capture_synced_Syntiant_AVI_FileName, "");
+    }
+
     SD_MMC.rename(AVITEMP, aviFileName);
+
     LOG_DBG("AVI close time %lu ms", millis() - hTime); 
     cTime = millis() - cTime;
     // AVI stats
@@ -338,9 +371,15 @@ static boolean processFrame() {
     if (!capturePIR && !isCapturing && !useMotion) checkMotion(fb, isCapturing); // to update light level
   }
   
+  unsigned long capture_synced_Syntiant_AVI_captureTimeSec = 10000; 
+  unsigned long capture_synced_Syntiant_AVI_startTime;
+
   // either active PIR, Motion, or force start button will start capture, neither active will stop capture
-  isCapturing = forceRecord | captureMotion | capturePIR;
-  if (forceRecord || wasRecording || doRecording) {
+  isCapturing = forceRecord | captureMotion | capturePIR | capture_synced_Syntiant_AVI;
+
+  if (capture_synced_Syntiant_AVI) capture_synced_Syntiant_AVI_startTime = millis();
+  if (forceRecord || wasRecording || doRecording || capture_synced_Syntiant_AVI) {
+
     if (forceRecord && !wasRecording) wasRecording = true;
     else if (!forceRecord && wasRecording) wasRecording = false;
     
@@ -349,18 +388,28 @@ static boolean processFrame() {
       if (AUTO_LAMP && nightTime) controlLamp(true); // switch on lamp
       stopPlaying(); // terminate any playback
       stopPlayback  = true; // stop any subsequent playback
-      LOG_INF("Capture started by %s%s%s", captureMotion ? "Motion " : "", capturePIR ? "PIR" : "",forceRecord ? "Button" : "");
+      LOG_INF("Capture started by %s%s%s%s", captureMotion ? "Motion " : "", capturePIR ? "PIR" : "",forceRecord ? "Button" : "", capture_synced_Syntiant_AVI ? "Syntiant TinyML board" : "");
       openAvi();
       wasCapturing = true;
     }
-    if (isCapturing && wasCapturing) {
+    if (isCapturing && wasCapturing && capture_synced_Syntiant_AVI) {
+      // capture is ongoing
+      dTimeTot += millis() - dTime;
+      while (millis() - capture_synced_Syntiant_AVI_startTime < capture_synced_Syntiant_AVI_captureTimeSec) {
+        LOG_INF("Recording 5 seconds for capture_synced_Syntiant_AVI..");
+        saveFrame(fb);
+      }
+      isCapturing = false;
+      savedFrame = true;
+    }
+    if (isCapturing && wasCapturing && !capture_synced_Syntiant_AVI) {
       // capture is ongoing
       dTimeTot += millis() - dTime;
       saveFrame(fb);
       savedFrame = true;
       showProgress();
       if (frameCnt >= MAX_FRAMES) {
-        Serial.println("");
+        //Serial.println("");
         LOG_INF("Auto closed recording after %u frames", MAX_FRAMES);
         forceRecord = false;
       }
@@ -373,6 +422,7 @@ static boolean processFrame() {
     wasCapturing = isCapturing;
     LOG_DBG("============================");
   }
+ 
   if (fb != NULL) esp_camera_fb_return(fb);
   fb = NULL; 
   if (finishRecording) {
@@ -589,7 +639,7 @@ void stopPlaying() {
     uint32_t timeOut = millis();
     while (isPlaying && millis() - timeOut < 2000) delay(10);
     if (isPlaying) {
-      Serial.println("");
+      //Serial.println("");
       LOG_WRN("Force closed playback");
       doPlayback = false; // stop webserver playback
       setFPS(saveFPS);
@@ -632,7 +682,7 @@ bool prepRecording() {
   if (USE_PIR) LOG_INF("- attach PIR to pin %u", PIR_PIN);
   if (USE_PIR) LOG_INF("- raise pin %u to 3.3V", PIR_PIN);
   if (useMotion) LOG_INF("- move in front of camera");
-  Serial.println();
+  //Serial.println();
   return true;
 }
 

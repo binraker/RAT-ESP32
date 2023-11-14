@@ -46,7 +46,7 @@ static esp_err_t updateAppStatus(const char* variable, const char* value) {
   else if(!strcmp(variable, "enableMotion")){
     //Turn on/off motion detection 
     useMotion = (intVal) ? true : false; 
-    LOG_INF("%s motion detection", useMotion ? "Enabling" : "Disabling");
+    //LOG_INF("%s motion detection", useMotion ? "Enabling" : "Disabling");
   }
   else if(!strcmp(variable, "timeLapseOn")) timeLapseOn = intVal;
   else if(!strcmp(variable, "lswitch")) nightSwitch = intVal;

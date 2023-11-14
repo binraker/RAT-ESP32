@@ -212,6 +212,7 @@ float readDS18B20temp(bool isCelsius);
 void remote_log_init();
 void removeChar(char *s, char c);
 void reset_log();
+void set_synced_Syntiant_AVI_FileName(const char *synced_Syntiant_AVI_fileName);
 void setupADC();
 void showProgress();
 void startFTPtask();
@@ -277,6 +278,8 @@ extern const char* defaultPage_html;
 // status & control fields 
 extern bool autoUpload;
 extern bool dbgMotion;
+extern bool capture_synced_Syntiant_AVI;
+extern bool capturing_synced_Syntiant_AVI;
 extern bool doPlayback;
 extern bool doRecording; // whether to capture to SD or not
 extern bool forceRecord; //Recording enabled by rec button
