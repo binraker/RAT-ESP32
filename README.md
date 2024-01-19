@@ -125,7 +125,7 @@ Additional options are provided on the camera index page, where:
 * `Show Motion` if enabled and the **Start Stream** button pressed, shows images of how movement is detected for calibration purposes. Gray pixels show movement, which turn to black if the motion threshold is reached.
 * `Min Frames` is the minimum number of frames to be captured or the file is deleted
 
-![image1](extras/motion.png)
+![image1](src/extras/motion.png)
 
 The `myConfig.h` file contains additional `#define` parameters that can be modified. 
 
@@ -145,9 +145,9 @@ Refer to the file `myConfig.h` to define microphone pin assignment and for furth
 
 # RAT-ESP32
 
-Ensure that the [data](data/) folder is copied to the SD card that will be inserted in the ESP32CAM as shown in the image below:
+Ensure that the [data](src/data/) folder is copied to the SD card that will be inserted in the ESP32CAM as shown in the image below:
 
-![SD Card contents](../media/Screenshot_SD_card_contents.png)
+![SD Card contents](media/Screenshot_SD_card_contents.png)
 
 Syntiant TinyML Board source code repository: https://github.com/binraker/RAT-TinyML-record
 # New updates
@@ -161,7 +161,7 @@ Syntiant TinyML Board source code repository: https://github.com/binraker/RAT-Ti
 |   115	    |   -8588	|   387	    |   -3654	|   8680	|   -3118	|   19802|
 |   115	    |   -8036	|   -478	|   -4258	|   8326	|   -3174	|   19837|
 
-![CSV files in Edge Impulse project](../media/Screenshot_Edge_Impulse_IMU_sample.png)
+![CSV files in Edge Impulse project](media/Screenshot_Edge_Impulse_IMU_sample.png)
 
 - Once the Syntiant board starts saving IMU data, it first communicates to the ESP32CAM and gives it a file name. The ESP32CAM then saves the AVI file using this file name. There is a config file, in the Syntiant's SD card, which keeps the count of how many files have been saved and this is used when creating new files. 
 
