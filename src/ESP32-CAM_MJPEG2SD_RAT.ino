@@ -9,9 +9,12 @@
 
 #include "myConfig.h"
 #include "camera_pins.h"
-//#include "mjpeg2sd.cpp"
+#include "avi_recorder.h"
 
-String synced_Syntiant_AVI_fileName = ""; //variable to store time received from the Syntiant TinyML board
+// set capturing_synced_Syntiant_AVI_record to true to disable video capture by processFrame() in mjepg2sd.cpp
+// set capturing_synced_Syntiant_AVI_record to false to enable video capture by processFrame() in mjepg2sd.cpp . THIS WILL HOWEVER DISABLE record_avi_video()!!!!
+bool capturing_synced_Syntiant_AVI_record = true; 
+
 String received_timestamp_from_ESP32CAM = ""; // stores the message received via Serial2
 
 void setup()
@@ -133,6 +136,7 @@ void setup()
   // start rest of services
   startWebServer();
   startStreamServer();
+
   prepMic();
   startSDtasks();
   startFTPtask();
@@ -141,8 +145,12 @@ void setup()
   prepPanTilt();
   setupADC();
   checkMemory();
+
   startSerialIn();
+
   LOG_INF("Camera Ready @ %uMHz, version %s", XCLK_MHZ, APP_VER);
+
+  delay(3000);
 }
 
 void loop()
@@ -165,23 +173,23 @@ void ReadFromSerial(void *pvParameters)
       messagePointer++;
       messagePointer = messagePointer % 10;
 
-     // check if Syntiant board has sent a time, capture an video and save it with the received time
-     // CAUTION! Maintain same format between Data, i.e, no space after ':'
-      char expectedDataPrefix[] = "[Data]:";
+     // check if Syntiant board has sent a command, capture a video and save it with the received time
+     // CAUTION! Maintain same format between [Video], i.e, no space after ':'
+      char expectedDataPrefix[] = "[Video]:";
       if (message.startsWith(expectedDataPrefix)) {
-        // Remove the first 7 characters
-        synced_Syntiant_AVI_fileName = "SensorDataAVI" + message.substring(7);
-        //LOG_INF("Proceeding to capture an AVI.. Filename is %s ..", synced_Syntiant_AVI_fileName);
-        //LOG_INF("Proceeding to capture an AVI..");
-
-        // save an AVI file
-        capture_synced_Syntiant_AVI = true;
-        // convert string name to char
-        char capture_synced_Syntiant_AVI_FileName[40];
+        // message example: [Video]:_501_2023_1_1_0_0_39
+        // Remove the first 8 characters
+        message = message.substring(8);
+ 
+        char asChar_AVI_FileName[40];
+        String synced_Syntiant_AVI_fileName = AVI_FILE_PREFIX + message;
         int synced_Syntiant_AVI_fileName_length = synced_Syntiant_AVI_fileName.length() +1;
-        synced_Syntiant_AVI_fileName.toCharArray(capture_synced_Syntiant_AVI_FileName, synced_Syntiant_AVI_fileName_length);
-        set_synced_Syntiant_AVI_FileName(capture_synced_Syntiant_AVI_FileName);
+        synced_Syntiant_AVI_fileName.toCharArray(asChar_AVI_FileName, synced_Syntiant_AVI_fileName_length); 
+        
+        set_AVI_FileName(asChar_AVI_FileName);
+        if(capturing_synced_Syntiant_AVI_record) record_avi_video();
       } 
+      delay(250);
     }
     delay(250);
   }

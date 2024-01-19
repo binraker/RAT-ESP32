@@ -143,10 +143,17 @@ The web page has a slider for **Microphone Gain**. The higher the value the high
 
 Refer to the file `myConfig.h` to define microphone pin assignment and for further info.
 
+# RAT-ESP32
+
+Ensure that the [data](data/) folder is copied to the SD card that will be inserted in the ESP32CAM as shown in the image below:
+
+![SD Card contents](../media/Screenshot_SD_card_contents.png)
+
+Syntiant TinyML Board source code repository: https://github.com/binraker/RAT-TinyML-record
 # New updates
 
-- The Syntiant board and ESP32CAM are now synced. The ESP32CAM fetches the time and gives it to the Syntiant board which then starts the RTC. If no time is found, there is a variable with a manually defined time variable `manual_set_start_time` which the Syntiant board will start counting from.
-- The CSV files created by the Syntiant board now look like the example below. They are now more understandable and also Edge Impulse CSV "compliant"
+- The Syntiant board and ESP32CAM are now synced. The ESP32CAM fetches the time and gives it to the Syntiant board which then starts the on-board RTC. If no time is found, there is a variable with a manually defined time variable, `manual_set_start_time`, which the Syntiant board will start counting from.
+- The CSV files created by the Syntiant board now look like the example below. They are now more visually understandable and also [Edge Impulse](https://edgeimpulse.com/) CSV "compliant". The image below shows a CSV sample that has been uploaded to an Edge Impulse project.
 
 | timestamp |   accX    |   accY    |   accZ    |   gyrX    |   gyrY    |   gyrZ |
 | --------  | --------- | --------- | --------- | --------- | --------- | ------ |
@@ -154,8 +161,29 @@ Refer to the file `myConfig.h` to define microphone pin assignment and for furth
 |   115	    |   -8588	|   387	    |   -3654	|   8680	|   -3118	|   19802|
 |   115	    |   -8036	|   -478	|   -4258	|   8326	|   -3174	|   19837|
 
-- Once the Syntiant board starts saving IMU data, it communicates to the ESP32CAM and gives it a file name. The ESP32CAM then saves the AVI file using this file name with the timestamp (this is yet to be implemented!). There is a config file, in the Syntiant's SD card, which keeps the count of how many files have been saved and this is used when creating new files. The files are now saved in the format below. 
+![CSV files in Edge Impulse project](../media/Screenshot_Edge_Impulse_IMU_sample.png)
+
+- Once the Syntiant board starts saving IMU data, it first communicates to the ESP32CAM and gives it a file name. The ESP32CAM then saves the AVI file using this file name. There is a config file, in the Syntiant's SD card, which keeps the count of how many files have been saved and this is used when creating new files. 
+
+- The CSV IMU files are now saved in the format below: 
 ```
-  sensorData_1_2023_11_10_16_56_00
-  that is, SensorData, file count(epoch), Year, Month, Date, Hr, Min, Seconds
+  IMUData_1_2023_11_10_16_56_00
+  that is, IMUData, file count(epoch), Year, Month, Date, Hr, Min, Seconds
 ```
+
+- The AVI recordings are now captured for 10 seconds at 10 frames per second (fps) and using SVGA frame size. Example:
+```
+  IMUSyncedVideo_1_2023_11_10_16_56_00.avi
+```
+
+- The Syntiant TinyML Board's RGB LED is blue when IMU data is being sampled. The RGB LED turns green when IMU data is not being sampled.
+
+# Performance (storage and power consumption)
+
+## Stored file sizes
+
+- The Syntiant TinyML Board continuously saves 10 seconds of IMU data in CSV files that are around 40KB. Afterwards, it waits for 2 seconds and the sampling is done again. Therefore, in 1 minute, 5 cycles will have run generating files of around 200KB. `Therefore, as an estimation, if you use a 4GB SD card in the Syntiant TinyML board, it will take around 300 hours for the SD card storage to be filled; assuming there are no other files other than the project ones.`
+
+- The ESP32CAM saved AVI files are initiated by the Syntiant TinyML Board. Each AVI file is around 2,300 KB. Therefore, in 1 minute, 5 cycles will have run generating files of around 11,500 KB. `Therefore, as an estimation, if you use a 4GB SD card in the ESP32CAM board, it will take around 5 hours for the SD card storage to be filled: assuming there are no other files other than the project ones.`
+
+## Power consumption
