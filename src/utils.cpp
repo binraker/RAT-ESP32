@@ -234,7 +234,7 @@ void syncToBrowser(const char *val) {
   timeSynchronized = true;
   //RAT
    Serial.print("@ ");
-  Serial.println(&now, "%Y:%m:%d:%H:%M:%S");
+  Serial.println(&now, "%Y:%m:%d:%H:%M:%S   ");
 //RAT
 }
 

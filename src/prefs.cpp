@@ -419,7 +419,7 @@ void getBootCount(){
   int rem = bootcount % 356;
 
   int Year, Month, Day, Hour, Minute, Second ;
-  Year = (bootcount / 365) + 1;
+  Year = (bootcount / 365) + 10;
   rem = bootcount % 356;
   Month = rem / 12;
   rem = rem % 12;
@@ -429,7 +429,7 @@ void getBootCount(){
   Second = 0;
 
   struct tm t;
-  t.tm_year = Year;
+  t.tm_year = Year ;
   t.tm_mon  = Month;    // Month, 0 - jan
   t.tm_mday = Day;          // Day of the month
   t.tm_hour = Hour;
@@ -448,7 +448,7 @@ struct tm now;
   timeSynchronized = true;
 
    Serial.print("@ ");
-  Serial.println(&now, "%Y:%m:%d:%H:%M:%S");
+  Serial.println(&now, "%Y:%m:%d:%H:%M:%S   ");
 
 
 
